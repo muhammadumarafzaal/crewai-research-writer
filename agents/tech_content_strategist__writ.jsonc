@@ -1,0 +1,53 @@
+{
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║  AGENT DEFINITION: Tech Content Strategist & Writer                    ║
+  // ║                                                                        ║
+  // ║  This is the SECOND agent in the crew. It does NOT search the web —    ║
+  // ║  instead, it receives the researcher's findings as "context" and       ║
+  // ║  transforms them into an engaging blog post.                           ║
+  // ║                                                                        ║
+  // ║  🔑 KEY CONCEPT — Context-Based Agents:                                ║
+  // ║    Not every agent needs tools. Some agents work purely from the       ║
+  // ║    context provided by earlier tasks. This keeps the crew efficient    ║
+  // ║    and avoids redundant API calls.                                     ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+
+  // The writer's "job title" — shapes how the LLM behaves
+  "role": "Tech Content Strategist & Writer",
+
+  // What this agent is trying to achieve
+  // Note: {topic} is the same input variable used by the researcher.
+  // Both agents receive the same topic, but approach it differently.
+  "goal": "Write an engaging, clear, and informative blog post based on research findings on {topic}",
+
+  // Personality and expertise — makes the LLM "act" like a skilled writer
+  "backstory": "You are a skilled technical writer who transforms detailed research into engaging, accessible, and structured articles that resonate with developers and tech enthusiasts.",
+
+  // Same LLM as the researcher (you can use different models per agent!)
+  "llm": "groq/openai/gpt-oss-120b",
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TOOLS: Empty! The writer doesn't search the web.
+  //
+  // ⚡ WHY no tools?
+  //   The writer's task has "context": ["conduct_thorough_research_on_task"]
+  //   in crew.jsonc. This means CrewAI automatically passes the researcher's
+  //   FULL output into the writer's prompt. The writer has everything it
+  //   needs to write the blog post without making any external calls.
+  //
+  //   This is a common pattern in CrewAI:
+  //     Agent A (with tools) → produces raw data
+  //     Agent B (no tools)   → consumes that data and refines it
+  // ──────────────────────────────────────────────────────────────────────────
+  "tools": [],
+
+  "settings": {
+    // Enable verbose logging to see the writer's thought process
+    "verbose": true,
+
+    // allow_delegation: false means this agent works independently.
+    // It won't try to ask the researcher for more info mid-task.
+    // This keeps execution predictable and linear.
+    "allow_delegation": false
+  }
+}
