@@ -1,0 +1,110 @@
+{
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║  AGENT DEFINITION: Senior Research Analyst                             ║
+  // ║                                                                        ║
+  // ║  In CrewAI, an "Agent" is an autonomous AI worker with:                ║
+  // ║    - A role (job title)                                                ║
+  // ║    - A goal (what it's trying to achieve)                              ║
+  // ║    - A backstory (personality & expertise)                             ║
+  // ║    - An LLM (the AI brain powering it)                                 ║
+  // ║    - Tools (external capabilities like web search)                     ║
+  // ║                                                                        ║
+  // ║  This file defines ONE agent. The filename must match the agent name   ║
+  // ║  listed in crew.jsonc's "agents" array.                                ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // ROLE: Think of this as the agent's job title.
+  // The LLM uses this to understand "who it is" when generating responses.
+  // ──────────────────────────────────────────────────────────────────────────
+  "role": "Senior Research Analyst",
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // GOAL: The agent's primary objective. This guides its decision-making.
+  //
+  // 🔑 KEY CONCEPT — Input Variables with {topic}:
+  //   The placeholder {topic} is replaced at runtime with whatever value
+  //   you pass via `crewai run`. For example, if you type "Agentic AI
+  //   workflows in 2026" when prompted, this becomes:
+  //   "Uncover cutting-edge developments and key insights on Agentic AI
+  //   workflows in 2026"
+  //
+  //   You can use {placeholders} in role, goal, or backstory.
+  //   They are interpolated from the "inputs" object in crew.jsonc,
+  //   or prompted interactively via `crewai run`.
+  // ──────────────────────────────────────────────────────────────────────────
+  "goal": "Uncover cutting-edge developments and key insights on {topic}",
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // BACKSTORY: Gives the agent a personality and expertise background.
+  // This is injected into the LLM's system prompt, so the AI "role-plays"
+  // as this character. A well-crafted backstory leads to better outputs.
+  // ──────────────────────────────────────────────────────────────────────────
+  "backstory": "You are an expert analyst known for extracting actionable facts, identifying emerging trends, and distilling complex technical information into clear, structured bullet points.",
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // LLM: The AI model that powers this agent's thinking.
+  //
+  // Format: "provider/model-name"
+  //   Examples: "openai/gpt-4o", "anthropic/claude-sonnet-4-6",
+  //             "groq/llama-3.3-70b-versatile", "ollama/llama3"
+  //
+  // CrewAI uses LiteLLM under the hood, so 100+ providers are supported.
+  // The matching API key must be set in your .env file.
+  // ──────────────────────────────────────────────────────────────────────────
+  "llm": "groq/openai/gpt-oss-120b",
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TOOLS: External capabilities this agent can use during its work.
+  //
+  // 🔑 KEY CONCEPT — How Tools Work:
+  //   Tools give agents the ability to interact with the outside world
+  //   (search the web, read files, scrape websites, etc.).
+  //
+  //   In JSON-first projects, you reference built-in tools by their
+  //   string name. CrewAI automatically imports and instantiates them.
+  //
+  //   Built-in tool names (from crewai-tools package):
+  //     "SerperDevTool"       — Google search via Serper.dev API
+  //     "ScrapeWebsiteTool"   — Scrape content from web pages
+  //     "FileReadTool"        — Read local files
+  //     "WebsiteSearchTool"   — RAG-based website search
+  //     etc.
+  //
+  //   Custom tools use the "custom:<name>" prefix and load from
+  //   the tools/ directory (e.g., "custom:my_tool" → tools/my_tool.py).
+  //
+  // 🔧 SerperDevTool SETUP:
+  //   1. Sign up at https://serper.dev (free tier: 2,500 searches)
+  //   2. Get your API key from the dashboard
+  //   3. Add to your .env file: SERPER_API_KEY=your_key_here
+  //
+  // ⚡ WHY only the researcher has tools:
+  //   The writer agent does NOT need search tools because it receives
+  //   the researcher's output as "context" (see crew.jsonc).
+  //   This is a clean separation of concerns:
+  //     Researcher → searches the web, gathers facts
+  //     Writer     → transforms those facts into a blog post
+  // ──────────────────────────────────────────────────────────────────────────
+  "tools": ["SerperDevTool"],
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SETTINGS: Fine-tune agent behavior
+  // ──────────────────────────────────────────────────────────────────────────
+  "settings": {
+    // verbose: When true, prints detailed logs of the agent's
+    // thought process (Thought → Action → Observation loops).
+    // Great for debugging! Set to true while learning.
+    "verbose": true,
+
+    // allow_delegation: When true, this agent can ask OTHER agents
+    // in the crew for help. The researcher might delegate a sub-task
+    // to the writer if it thinks writing is needed.
+    // For this simple crew, we keep it false to avoid confusion.
+    "allow_delegation": false,
+
+    // planning: When true, the agent creates a step-by-step plan
+    // BEFORE starting its task. This improves quality for complex tasks.
+    "planning": true
+  }
+}
