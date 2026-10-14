@@ -1,0 +1,171 @@
+{
+  // ╔══════════════════════════════════════════════════════════════════════════╗
+  // ║                     CREW DEFINITION FILE                               ║
+  // ║                                                                        ║
+  // ║  This is the CENTRAL configuration for your CrewAI project.            ║
+  // ║  It defines:                                                           ║
+  // ║    1. Which agents are in the crew                                     ║
+  // ║    2. What tasks they perform (and in what order)                       ║
+  // ║    3. How tasks chain together via "context"                           ║
+  // ║    4. The execution process (sequential vs hierarchical)               ║
+  // ║    5. Runtime inputs (like {topic})                                    ║
+  // ║                                                                        ║
+  // ║  Run with: crewai run                                                  ║
+  // ╚══════════════════════════════════════════════════════════════════════════╝
+
+  // Display name for this crew (shown in logs and traces)
+  "name": "research_and_blog_crew",
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // AGENTS LIST
+  //
+  // Each name here MUST have a matching file in agents/<name>.jsonc
+  //   "senior_research_analyst"       → agents/senior_research_analyst.jsonc
+  //   "tech_content_strategist__writ" → agents/tech_content_strategist__writ.jsonc
+  //
+  // The order here doesn't matter — task assignment determines who does what.
+  // ──────────────────────────────────────────────────────────────────────────
+  "agents": ["senior_research_analyst", "tech_content_strategist__writ"],
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TASKS: The work items your crew will execute
+  //
+  // 🔑 KEY CONCEPT — Sequential Execution:
+  //   Since "process" is "sequential" (see below), tasks run IN ORDER:
+  //     1. First:  conduct_thorough_research_on_task  (researcher)
+  //     2. Second: using_the_research_report_task     (writer)
+  //
+  //   Each task's output is automatically available to subsequent tasks.
+  //   But for explicit dependencies, use the "context" field (see Task 2).
+  // ──────────────────────────────────────────────────────────────────────────
+  "tasks": [
+    // ════════════════════════════════════════════════════════════════════════
+    // TASK 1: Research Task (executed FIRST)
+    // ════════════════════════════════════════════════════════════════════════
+    {
+      // Unique identifier for this task. Other tasks can reference it
+      // via the "context" array to receive its output.
+      "name": "conduct_thorough_research_on_task",
+
+      // ────────────────────────────────────────────────────────────────────
+      // DESCRIPTION: What the agent should do.
+      //
+      // 🔑 KEY CONCEPT — {topic} Input Variable:
+      //   {topic} is a placeholder that gets replaced at runtime.
+      //   When you run `crewai run`, it will prompt you:
+      //     "Enter value for topic:"
+      //   Whatever you type becomes the value of {topic} everywhere
+      //   in this file AND in the agent JSONC files.
+      //
+      //   You can also set defaults in the "inputs" object below,
+      //   or pass them via: crewai run --inputs '{"topic": "AI"}'
+      // ────────────────────────────────────────────────────────────────────
+      "description": "Conduct thorough research on {topic}. Identify key trends, main challenges, and future outlook.",
+
+      // What the final output should look like. This acts as a quality
+      // guide — the LLM will try to match this format in its response.
+      "expected_output": "A structured markdown report with key findings, detailed bullet points, and references.",
+
+      // ────────────────────────────────────────────────────────────────────
+      // AGENT ASSIGNMENT: Which agent handles this task.
+      //
+      // This must match a name from the "agents" list above, which in
+      // turn matches an agents/<name>.jsonc file.
+      //
+      // The researcher has tools: ["SerperDevTool"], so it CAN search
+      // the web to gather real information about the topic.
+      // ────────────────────────────────────────────────────────────────────
+      "agent": "senior_research_analyst"
+    },
+
+    // ════════════════════════════════════════════════════════════════════════
+    // TASK 2: Writing Task (executed SECOND)
+    // ════════════════════════════════════════════════════════════════════════
+    {
+      "name": "using_the_research_report_task",
+
+      // The writer's instructions — note it says "Using the research report"
+      // because it will receive Task 1's output via the "context" field.
+      "description": "Using the research report, write an engaging and informative 4-section blog post on {topic} covering introduction, key insights, practical takeaways, and a conclusion.",
+
+      "expected_output": "A complete, publication-ready markdown blog post.",
+
+      // The writer agent — has NO tools (tools: []), works purely
+      // from the context provided by the research task.
+      "agent": "tech_content_strategist__writ",
+
+      // ────────────────────────────────────────────────────────────────────
+      // CONTEXT: Task Chaining / Dependencies
+      //
+      // 🔑 KEY CONCEPT — How Task Chaining Works:
+      //   "context" is an array of task NAMES whose outputs should be
+      //   injected into THIS task's prompt. This is how data flows
+      //   between tasks:
+      //
+      //   ┌─────────────────────────┐
+      //   │  Task 1: Research       │
+      //   │  Agent: Researcher      │──── output ────┐
+      //   │  Tools: SerperDevTool   │                 │
+      //   └─────────────────────────┘                 │
+      //                                               ▼
+      //   ┌─────────────────────────┐    ┌───────────────────┐
+      //   │  Task 2: Writing        │◄───│  context:          │
+      //   │  Agent: Writer          │    │  [research_task]   │
+      //   │  Tools: none            │    └───────────────────┘
+      //   └─────────────────────────┘
+      //
+      //   The FULL output of Task 1 is automatically prepended to the
+      //   writer's prompt, giving it all the research findings to work with.
+      //
+      //   You can list MULTIPLE tasks in the context array:
+      //     "context": ["task_a", "task_b", "task_c"]
+      //   All their outputs will be combined as context.
+      // ────────────────────────────────────────────────────────────────────
+      "context": ["conduct_thorough_research_on_task"]
+    }
+
+  ],
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PROCESS: How tasks are executed
+  //
+  // 🔑 KEY CONCEPT — Sequential vs Hierarchical:
+  //
+  //   "sequential" (our choice):
+  //     Tasks run one after another, in the order they appear above.
+  //     Simple, predictable, and easy to debug. Best for linear workflows.
+  //     Flow: Task 1 → Task 2 → Task 3 → ... → Done
+  //
+  //   "hierarchical":
+  //     A "manager" agent dynamically delegates tasks to other agents
+  //     based on their capabilities. Requires setting "manager_llm".
+  //     More flexible, but harder to predict. Best for complex workflows
+  //     where task order depends on intermediate results.
+  // ──────────────────────────────────────────────────────────────────────────
+  "process": "sequential",
+
+  // Enable verbose logging — prints the full Thought → Action → Observation
+  // loop for every agent step. Essential for learning and debugging!
+  "verbose": true,
+
+  // Memory: When true, agents remember context across tasks and even
+  // across separate runs. Disabled here for simplicity.
+  "memory": false,
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // INPUTS: Default values for {placeholder} variables
+  //
+  // 🔑 KEY CONCEPT — Input Flow:
+  //   1. You run: crewai run
+  //   2. CrewAI scans all agent/task text for {placeholders}
+  //   3. It checks the "inputs" object below for default values
+  //   4. Any missing values are prompted interactively in the terminal
+  //   5. Values are injected into role, goal, backstory, description, etc.
+  //
+  //   You can also pass inputs from the command line:
+  //     crewai run --inputs '{"topic": "Agentic AI workflows in 2026"}'
+  //
+  //   Or leave "inputs" empty and always get prompted interactively.
+  // ──────────────────────────────────────────────────────────────────────────
+  "inputs": {}
+}
